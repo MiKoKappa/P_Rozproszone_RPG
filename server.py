@@ -1,10 +1,12 @@
+from calendar import c
 import socket
 from _thread import *
 import sys
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-lock = allocate_lock()
+lock_id = allocate_lock()
+lock_coin = allocate_lock()
 
 server = 'localhost'
 port = 5555
@@ -21,15 +23,18 @@ s.listen(2)
 print("Oczekiwanie na połączenia")
 
 currentId = "0"
+coinPositions = ["100,20", "275,45", "150,150"]
+currCoinPos = 0
 pos = ["0:-1,-1,3,0,-1", "1:-1,-1,3,0,-1"]
 def threaded_client(conn):
-	global currentId, pos, lock
+	global currentId, pos, lock_id, lock_coin, coinPositions, currCoinPos
 	conn.send(str.encode(currentId))
-	with lock:
+	with lock_id:
 		currentId = "1"
 	reply = ''
 	while True:
 		try:
+			collected = 0
 			data = conn.recv(2048)
 			reply = data.decode('utf-8')
 			if not data:
@@ -39,13 +44,18 @@ def threaded_client(conn):
 				print("Otrzymano: " + reply)
 				arr = reply.split(":")
 				id = int(arr[0])
-				with lock:
+				with lock_id:
 					pos[id] = reply
 
 				if id == 0: nid = 1
 				if id == 1: nid = 0
-
 				reply = pos[nid][:]
+				if(int(arr[1][-1])==1):
+					with lock_coin:
+						currCoinPos = (currCoinPos + 1)%3
+						collected = 1
+				reply = reply+","+str(collected)+","+coinPositions[currCoinPos]
+
 				print("Wysłano: " + reply)
 
 			conn.sendall(str.encode(reply))
@@ -53,7 +63,7 @@ def threaded_client(conn):
 			break
 
 	print("Zamknięto połączenie")
-	with lock:
+	with lock_id:
 		currentId = "0"
 	conn.close()
 
