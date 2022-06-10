@@ -43,22 +43,22 @@ def threaded_client(conn):
 			else:
 				print("Otrzymano: " + reply)
 				arr = reply.split(":")
-				id = int(arr[0])
-				with lock_id:
-					pos[id] = reply
-
-				if id == 0: nid = 1
-				if id == 1: nid = 0
-				reply = pos[nid][:]
 				if(int(arr[1][-1])==1):
 					with lock_coin:
 						currCoinPos = (currCoinPos + 1)%3
 						collected = 1
-				reply = reply+","+str(collected)+","+coinPositions[currCoinPos]
+				id = int(arr[0])
+				with lock_id:
+					pos[id] = reply[:len(reply)-2]
+				if id == 0: nid = 1
+				if id == 1: nid = 0
+				sendString = str(pos[nid][:])+","+str(collected)+","+coinPositions[currCoinPos]
+				
+				
 
-				print("Wysłano: " + reply)
+				print("Wysłano: " + sendString)
 
-			conn.sendall(str.encode(reply))
+			conn.sendall(str.encode(sendString))
 		except:
 			break
 

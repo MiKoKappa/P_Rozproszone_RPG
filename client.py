@@ -205,7 +205,7 @@ class Game:
     def parse_data(data):
         try:
             d = data.split(":")[1].split(",")
-            print(d)
+            #print(d)
             return int(d[0]), int(d[1]), int(d[2]), int(d[3]), int(d[4]), int(d[5]), int(d[6]), int(d[7])
         except:
             return -1,-1,3,0,-1,0,-1,-1
